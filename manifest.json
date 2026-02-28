@@ -13,15 +13,13 @@
       "matches": [
         "*://*.reddit.com/*"
       ]
-
-    }
-  ],
-  "permissions": ["storage", "activeTab"],
-  "host_permissions": ["https://www.reddit.com/*"],
-  "content_scripts": [
+    },
     {
       "matches": ["https://www.reddit.com/*"],
       "js": ["reddit_limiter.js"]
     }
-  ]
+
+  ],
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://www.reddit.com/*"]
 }
