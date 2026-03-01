@@ -7,11 +7,7 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-
-import requests
-import os
 from pathlib import Path
-
 class RedditDownloader:
 
     def __init__(self):
