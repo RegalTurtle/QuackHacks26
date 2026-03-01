@@ -1,6 +1,6 @@
 {
-  "name": "Reddit Scraper",
-  "description": "Scrapes visible Reddit posts.",
+  "name": "My Human Reddit",
+  "description": "Keep Reddit human with multi-media AI detection based on dynamic confidence level settings.",
   "version": "1.0",
   "manifest_version": 3,
   "action": {
