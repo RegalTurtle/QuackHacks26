@@ -3,6 +3,7 @@ let activeType = null;
 let runId = 0;
 let enabled;
 let threshold = 1;
+const processedPosts = new Set();
 
 let scoreMap = new Map();
 
@@ -114,18 +115,16 @@ const run_limiter = (type) => {
 
       // TODO replace this with actual call
       const get_item_list = () => {
+        extractPosts();
+
         const inner_items = outer_struct.querySelectorAll(type_struct.inner_item);
 
         return [...inner_items].map(item => {
           const id = item.getAttribute(type_struct.id_name);
 
-          if (!scoreMap.has(id)) {
-            scoreMap.set(id, Math.random()); // placeholder AI
-          }
-
           return {
             id,
-            percent_ai: scoreMap.get(id)
+            percent_ai: scoreMap.get(id) ?? 0  // default to 0 until backend responds
           };
         });
       };
@@ -224,3 +223,60 @@ chrome.storage.onChanged.addListener((changes, area) => {
   // Re-run limiter logic safely
   handleRouteChange();
 });
+
+function extractPosts() {
+
+    const posts = document.querySelectorAll("shreddit-post");
+
+    const results = [];
+
+    posts.forEach(post => {
+        const postId = post.getAttribute("id");
+        // Skip if already processed
+        if (processedPosts.has(postId)) return;
+        processedPosts.add(postId);
+        results.push(postId);
+
+    });
+        // once the loop is done, fire the backend call if there were new posts
+        if (results.length > 0) {
+            console.log("Extracted post ids:", results);
+            sendToBackend(results);
+        }
+
+    return results;
+}
+
+// Function to send data to Flask backend
+function sendToBackend(postids) {
+  fetch("http://localhost:5000/extract", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      ids: postids
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Backend Response:", data);
+
+    // Expecting:
+    // [
+    //   { id: "t3_abc123", percent_ai: 0.87 }
+    // ]
+
+    data.forEach(entry => {
+      if (entry.id && typeof entry.percent_ai === "number") {
+        scoreMap.set(entry.id, entry.percent_ai);
+      }
+    });
+
+    // Re-run limiter after updating scores
+    handleRouteChange();
+  })
+  .catch(err => {
+    console.error("Error:", err);
+  });
+}

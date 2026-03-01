@@ -9,12 +9,6 @@
   },
   "content_scripts": [
     {
-      "js": ["content.js"],
-      "matches": [
-        "*://*.reddit.com/*"
-      ]
-    },
-    {
       "js": ["reddit_limiter.js"],
       "matches": ["https://www.reddit.com/*"]
     }

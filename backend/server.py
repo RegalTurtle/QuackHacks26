@@ -59,16 +59,26 @@ def detect_post(post_id):
 
     result = []
     path = f'posts/{post_id}'
+    
+    print("Checking post:", post_id)
+    print("Images:", os.listdir(f'{path}/images'))
+    print("Videos:", os.listdir(f'{path}/videos'))
 
     for entry in os.listdir(f'{path}/images'):
        percentage = detect_image(f'{path}/images/{entry}')
        if percentage >= 0:
-           result += [{post_id: percentage}]
+          result += [{
+            "id": post_id,
+            "percent_ai": percentage
+          }]
 
     for entry in os.listdir(f'{path}/videos'):
        percentage = detect_video(f'{path}/videos/{entry}')
        if percentage >= 0:
-           result += [{post_id: percentage}]
+          result += [{
+            "id": post_id,
+            "percent_ai": percentage
+          }]
 
 #    for text in content['text']:
 #       percentage = detect_text(text)
@@ -97,6 +107,7 @@ def detect_image(path):
     r = requests.post('https://api.sightengine.com/1.0/check.json', files=files, data=params)
 
     output = json.loads(r.text)
+    print("Sightengine response:", output)
     if 'type' in output:
         return output['type']['ai_generated']
 
