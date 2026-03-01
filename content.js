@@ -79,6 +79,12 @@
 
 
 // Keep track of processed posts
+
+const mainElement = document.querySelector('main');
+
+console.log('This is a content script!');
+console.log('Main element:', mainElement);
+
 const processedPosts = new Set();
 
 function extractPosts() {
@@ -200,6 +206,9 @@ window.addEventListener("load", () => {
 
 });
 
+chrome.storage.sync.get(['enabled', 'threshold'], ({ enabled, threshold }) => {
+  console.log('Loaded settings from storage:', { enabled, threshold });
+});
 
 // data-post-id="t3_1rgzycc"
 // shreddit-post

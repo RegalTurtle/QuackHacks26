@@ -1,5 +1,6 @@
 {
   "manifest_version": 3,
+<<<<<<< HEAD
   "name": "AI Detector",
   "version": "1.0",
   "permissions": ["activeTab", "scripting"],
@@ -28,3 +29,20 @@
 //     }
 //   ]
 // }
+=======
+  "action": {
+    "default_popup": "hello.html",
+    "default_icon": "hello_extensions.png"
+  },
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "matches": [
+        "*://*.reddit.com/*"
+      ]
+
+    }
+  ],
+  "permissions": ["storage", "activeTab"]
+}
+>>>>>>> f64d87d16525576e3c47cd60a1ca011ab8298cf7
