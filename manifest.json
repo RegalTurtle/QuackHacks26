@@ -1,6 +1,6 @@
 {
-  "name": "Hello Extensions",
-  "description": "Base Level Extension",
+  "name": "Reddit Scraper",
+  "description": "Scrapes visible Reddit posts.",
   "version": "1.0",
   "manifest_version": 3,
   "action": {
@@ -13,8 +13,13 @@
       "matches": [
         "*://*.reddit.com/*"
       ]
-
+    },
+    {
+      "js": ["reddit_limiter.js"],
+      "matches": ["https://www.reddit.com/*"]
     }
+
   ],
-  "permissions": ["storage", "activeTab"]
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://www.reddit.com/*"]
 }
