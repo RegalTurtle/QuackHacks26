@@ -1,93 +1,86 @@
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request
 import requests
 import json
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
 
 app = Flask(__name__)
 
-from pathlib import Path
-class RedditDownloader:
+USER = os.environ.get('API_USER')
+SECRET = os.environ.get('API_SECRET')
 
-    def __init__(self):
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "HackathonBot/1.0"
-        })
+CACHE = {}
 
-    def fetch_json(self, post_id):
+def detect_post(post_id):
+    if post_id in CACHE:
+        return CACHE[post_id]
 
-        url = f"https://www.reddit.com/comments/{post_id}.json"
+    result = []
+    path = f'posts/{post_id}/'
 
-        response = self.session.get(url)
+    for entry in os.listdir(f'{path}/images'):
+       percentage = detect_image(f'{path}/images/{entry}')
+       if percentage >= 0:
+           result += [{post_id: percentage}]
 
-        return response.json()
+    for entry in os.listdir(f'{path}/videos'):
+       percentage = detect_video(f'{path}/videos/{entry}')
+       if percentage >= 0:
+           result += [{post_id: percentage}]
 
+#    for text in content['text']:
+#       percentage = detect_text(text)
+#       if percentage >= 0:
+#           result += [{post_id: percentage}]
 
-    def download_media(self, url, filepath):
+    CACHE[post_id] = result
 
-        response = self.session.get(url, stream=True)
+    return result
 
-        with open(filepath, "wb") as f:
-            for chunk in response.iter_content(1024):
-                f.write(chunk)
+@app.route("/detect", methods=['POST'])
+def detect():
+    body = request.get_json()
+    output = []
+    
+    for post_id in body['ids']:
+        output += detect_post(post_id)
 
+    return output
 
-    def process_post(self, post_id):
-        data = self.fetch_json(post_id)
-        post = data[0]["data"]["children"][0]["data"]
+def detect_image(path):
+    params = {
+      'models': 'genai',
+      'api_user': USER, 
+      'api_secret': SECRET
+    }
+    files = {'media': open(path, 'rb')}
+    r = requests.post('https://api.sightengine.com/1.0/check.json', files=files, data=params)
 
-        base = Path("data") / post_id
+    output = json.loads(r.text)
+    if 'type' in output:
+        return output['type']['ai_generated']
 
-        images_dir = base / "images"
-        videos_dir = base / "videos"
+    return -1
 
-        images_dir.mkdir(parents=True, exist_ok=True)
-        videos_dir.mkdir(parents=True, exist_ok=True)
+def detect_video(path):
+    params = {
+      'models': 'genai',
+      'api_user': USER,
+      'api_secret':SECRET 
+    }
 
-        # Save text
-        with open(base / "text.txt", "w") as f:
-            f.write(post.get("selftext", ""))
+    files = {'media': open(path, 'rb')}
+    r = requests.post('https://api.sightengine.com/1.0/video/check-sync.json', files=files, data=params)
+    output = json.loads(r.text)
 
-        # Images
-        if "preview" in post:
-            for i, img in enumerate(post["preview"]["images"]):
-                url = img["source"]["url"].replace("&amp;", "&")
+    if 'data' not in output:
+        return -1
 
-                self.download_media(
-                    url,
-                    images_dir / f"{i}.jpg"
-                )
+    percentage = 0.0
+    for data in output['data']['frames']:
+        percentage = max(percentage, data['type']['ai_generated'])
 
-        # Video
-        if post.get("is_video"):
-            video_url = post["media"]["reddit_video"]["fallback_url"]
-
-            self.download_media(
-                video_url,
-                videos_dir / "0.mp4"
-            )
-
-downloader = RedditDownloader()
-downloader.process_post("1rha4s8")
-
-
-
-# def main():
-#     # simple command-line entrypoint for testing the downloader
-#     import argparse
-
-#     parser = argparse.ArgumentParser(description="Download media/text from a Reddit post id")
-#     parser.add_argument("post_id", help="the Reddit post id to process, e.g. 1rha4s8")
-#     args = parser.parse_args()
-
-#     downloader = RedditDownloader()
-#     downloader.process_post(args.post_id)
-
-
-# if __name__ == "__main__":
-#     # if the file is executed directly we run the downloader with the provided id
-#     main()
-
+    return percentage
 
