@@ -31,8 +31,14 @@ numberInput.addEventListener('input', () => {
 
 function sendToContent(message) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs[0]?.id) chrome.tabs.sendMessage(tabs[0].id, message)
-  })
+    if (!tabs[0]?.id) return;
+
+    chrome.tabs.sendMessage(tabs[0].id, message)
+      .catch(err => {
+        // Ignore errors when no content script is present
+        console.debug("No content script to receive message:", err);
+      });
+  });
 }
 
 function updateGradient(value) {

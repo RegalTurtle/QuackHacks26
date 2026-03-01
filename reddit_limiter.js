@@ -1,6 +1,8 @@
 let activeObserver = null;
 let activeType = null;
 let runId = 0;
+let enabled;
+let threshold = 1;
 
 const structs = {
   post: {
@@ -57,6 +59,7 @@ const run_limiter = (type) => {
 
   const type_struct = structs[type] || null;
   if (!type_struct) return;
+  
 
   waitForElement(type_struct.outer_struct, () => {
     requestAnimationFrame(() => {
@@ -91,6 +94,17 @@ const run_limiter = (type) => {
             item.style.display = "none";
           }
         });
+
+        if (activeType === "feed") {
+          let ads = outer_struct.querySelectorAll("shreddit-ad-post");
+          ads.forEach(ad => {
+            ad.style.display = "none";
+          })
+          ads = outer_struct.querySelectorAll("shreddit-dynamic-ad-link");
+          ads.forEach(ad => {
+            ad.style.display = "none";
+          })
+        }
       };
 
       // TODO replace this with actual call
@@ -103,12 +117,9 @@ const run_limiter = (type) => {
         }));
       };
 
-      // TODO: replace this with actual call
-      const percent_confidence = 0.5;
-
       // Create observer and store it
       activeObserver = new MutationObserver(() => {
-        hide_items(get_item_list(), percent_confidence);
+        hide_items(get_item_list(), threshold);
       });
 
       activeObserver.observe(outer_struct, {
@@ -117,7 +128,7 @@ const run_limiter = (type) => {
       });
 
       // Initial run
-      hide_items(get_item_list(), percent_confidence);
+      hide_items(get_item_list(), threshold);
     });
   });
 };
@@ -161,4 +172,26 @@ const init = () => {
   observeNavigation();     // listen for SPA changes
 };
 
-init();
+chrome.storage.sync.get(['enabled', 'threshold'], (result) => {
+  enabled = result.enabled ?? false;
+  threshold = (result.threshold ?? 100) / 100;
+
+  init();
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "sync") return;
+
+  if (changes.enabled) {
+    enabled = changes.enabled.newValue ?? true;
+  }
+
+  if (changes.threshold) {
+    threshold = (changes.threshold.newValue ?? 100) / 100;
+  }
+
+  console.log("Storage updated:", { enabled, threshold });
+
+  // Re-run limiter logic safely
+  handleRouteChange();
+});

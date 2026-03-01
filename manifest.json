@@ -15,8 +15,8 @@
       ]
     },
     {
-      "matches": ["https://www.reddit.com/*"],
-      "js": ["reddit_limiter.js"]
+      "js": ["reddit_limiter.js"],
+      "matches": ["https://www.reddit.com/*"]
     }
 
   ],
