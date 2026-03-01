@@ -3,10 +3,48 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
+from extractor import RedditDownloader 
 
 load_dotenv()
 
 app = Flask(__name__)
+
+@app.route("/extract", methods=['POST'])
+def call_class():
+    """Endpoint called from the extension content script.
+
+    Expects a JSON body of the form:
+
+        { "ids": ["abc123", "def456", ...] }
+
+    For each post id we kick off the downloader and then run the
+    existing detection logic on the freshly downloaded files.
+    The response is simply whatever ``detect`` returns.
+    """
+
+    print("route hit")
+
+    body = request.get_json(force=True)
+    if not body or 'ids' not in body:
+        return {"error": "request must contain JSON with an 'ids' list"}, 400
+
+    post_ids = body['ids']
+    if not isinstance(post_ids, list):
+        return {"error": "'ids' must be a list"}, 400
+
+    downloader = RedditDownloader()
+    for pid in post_ids:
+        try:
+            downloader.process_post(pid)
+        except Exception:
+            # if one download fails, continue with the others; the
+            # detection step may still work for previously cached items
+            app.logger.exception(f"failed to download {pid}")
+
+    # run the detection over all requested ids and return results as JSON
+    result = detect(post_ids)
+    return json.dumps(result), 200, {'Content-Type': 'application/json'}
+
 
 USER = os.environ.get('API_USER')
 SECRET = os.environ.get('API_SECRET')
@@ -18,7 +56,7 @@ def detect_post(post_id):
         return CACHE[post_id]
 
     result = []
-    path = f'posts/{post_id}/'
+    path = f'posts/{post_id}'
 
     for entry in os.listdir(f'{path}/images'):
        percentage = detect_image(f'{path}/images/{entry}')
@@ -39,12 +77,10 @@ def detect_post(post_id):
 
     return result
 
-@app.route("/detect", methods=['POST'])
-def detect():
-    body = request.get_json()
+# @app.route("/detect", methods=['POST'])
+def detect(post_ids):
     output = []
-    
-    for post_id in body['ids']:
+    for post_id in post_ids:
         output += detect_post(post_id)
 
     return output
