@@ -10,7 +10,7 @@ class RedditDownloader:
 
     def fetch_json(self, post_id):
 
-        url = f"https://www.reddit.com/comments/{post_id}.json"
+        url = f"https://www.reddit.com/comments/{post_id[3:]}.json"
 
         response = self.session.get(url)
 
