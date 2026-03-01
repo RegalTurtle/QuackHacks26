@@ -4,10 +4,12 @@ import json
 import os
 from dotenv import load_dotenv
 from extractor import RedditDownloader 
+from flask_cors import CORS
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/extract", methods=['POST'])
 def call_class():
