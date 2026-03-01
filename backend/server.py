@@ -50,6 +50,7 @@ def call_class():
 
 USER = os.environ.get('API_USER')
 SECRET = os.environ.get('API_SECRET')
+ZEROGPT_KEY = os.environ.get('ZEROGPT_KEY')
 
 CACHE = {}
 
@@ -59,10 +60,24 @@ def detect_post(post_id):
 
     result = []
     path = f'posts/{post_id}'
-    
+
     print("Checking post:", post_id)
     print("Images:", os.listdir(f'{path}/images'))
     print("Videos:", os.listdir(f'{path}/videos'))
+
+    # Text detection with existence check
+    text_path = f'{path}/text'
+    if os.path.exists(text_path):
+        for entry in os.listdir(text_path):
+            with open(f'{text_path}/{entry}', 'r', encoding='utf-8') as f:
+                text = f.read()
+                if text.strip():  # Only process non-empty text
+                    fakePercentage = detect_text(text)
+                    if fakePercentage >= 0:
+                        result += [{
+                            "id": post_id,
+                            "percent_ai": fakePercentage
+                        }]
 
     for entry in os.listdir(f'{path}/images'):
        percentage = detect_image(f'{path}/images/{entry}')
@@ -96,6 +111,22 @@ def detect(post_ids):
         output += detect_post(post_id)
 
     return output
+
+
+def detect_text(text):
+    headers = {
+     'ApiKey': ZEROGPT_KEY
+    }
+    body = {
+        'input_text': text,
+    }
+    r = requests.post('https://api.zerogpt.com/api/detect/detectText', json=body, headers=headers)
+    output = json.loads(r.text)
+    print("ZeroGPT response:", output)
+    if 'fakePercentage' in output:
+        return output['fakePercentage'] / 100
+    
+    return -1
 
 def detect_image(path):
     params = {

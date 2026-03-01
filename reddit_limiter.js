@@ -80,7 +80,7 @@ const run_limiter = (type) => {
         // ]
         const hideSet = new Set(
           item_list
-            .filter(i => i.percent_ai >= percent_confidence)
+            .filter(i => i.percent_ai >= (1 - percent_confidence)) //flipped because higher means more likely to be AI, and we want to hide those above the threshold
             .map(i => i.id)
         );
 

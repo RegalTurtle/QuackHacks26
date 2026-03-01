@@ -34,12 +34,14 @@ class RedditDownloader:
 
         images_dir = base / "images"
         videos_dir = base / "videos"
+        text_dir = base / "text"
 
         images_dir.mkdir(parents=True, exist_ok=True)
         videos_dir.mkdir(parents=True, exist_ok=True)
+        text_dir.mkdir(parents=True, exist_ok=True)
 
         # Save text
-        with open(base / "text.txt", "w") as f:
+        with open(text_dir / "selftext.txt", "w", encoding="utf-8") as f:
             f.write(post.get("selftext", ""))
 
         # Images
