@@ -1,4 +1,4 @@
-# QuackHacks26
+# Quack Hacks '26
 
 ## Reddit Limiter
 
