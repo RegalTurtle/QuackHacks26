@@ -69,89 +69,25 @@ class RedditDownloader:
                 videos_dir / "0.mp4"
             )
 
-# downloader = RedditDownloader()
-# downloader.process_post("1rha4s8")
+downloader = RedditDownloader()
+downloader.process_post("1rha4s8")
 
 
-def main():
-    # simple command-line entrypoint for testing the downloader
-    import argparse
 
-    parser = argparse.ArgumentParser(description="Download media/text from a Reddit post id")
-    parser.add_argument("post_id", help="the Reddit post id to process, e.g. 1rha4s8")
-    args = parser.parse_args()
+# def main():
+#     # simple command-line entrypoint for testing the downloader
+#     import argparse
 
-    downloader = RedditDownloader()
-    downloader.process_post(args.post_id)
+#     parser = argparse.ArgumentParser(description="Download media/text from a Reddit post id")
+#     parser.add_argument("post_id", help="the Reddit post id to process, e.g. 1rha4s8")
+#     args = parser.parse_args()
 
-
-if __name__ == "__main__":
-    # if the file is executed directly we run the downloader with the provided id
-    main()
-
-# USER = os.environ.get('API_USER')
-# SECRET = os.environ.get('API_SECRET')
-
-# def detect_post(post_id, content):
-#     result = []
-
-#     for image_url in content['images']:
-#        percentage = detect_image(image_url)
-#        if percentage >= 0:
-#            result += [{post_id: percentage}]
-
-#     for video_url in content['videos']:
-#        percentage = detect_video(video_url)
-#        if percentage >= 0:
-#            result += [{post_id: percentage}]
-
-#     for text in content['text']:
-#        percentage = detect_text(text)
-#        if percentage >= 0:
-#            result += [{post_id: percentage}]
-
-#     return result
-
-# @app.route("/detect", methods=['POST'])
-# def detect():
-#     body = request.get_json()
-#     output = []
-    
-#     for post_id in body:
-#         content = body[post_id]
-#         output += detect_post(post_id, content)
-
-#     return output
-
-# def detect_image(url):
-#     params = {
-#       'url': url,
-#       'models': 'genai',
-#       'api_user': USER,
-#       'api_secret': SECRET, 
-#     }
-
-#     r = requests.get('https://api.sightengine.com/1.0/check.json', params=params)
-#     output = json.loads(r.text)
-
-#     if 'ai_generated' in output:
-#         return output['ai_generated']
-#     return -1
+#     downloader = RedditDownloader()
+#     downloader.process_post(args.post_id)
 
 
-# def detect_video(url):
-#     params = {
-#       'models': 'genai',
-#       'api_user': USER,
-#       'api_secret':SECRET 
-#     }
+# if __name__ == "__main__":
+#     # if the file is executed directly we run the downloader with the provided id
+#     main()
 
-#     files = {'media': url}
-#     r = requests.post('https://api.sightengine.com/1.0/video/check-sync.json', files=files, data=params)
-#     output = json.loads(r.text)
-
-#     return output
-#    if 'ai_generated' in output:
-#        return output['ai_generated']
-#    return -1
 
