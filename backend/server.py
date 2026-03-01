@@ -68,16 +68,20 @@ def detect_post(post_id):
     # Text detection with existence check
     text_path = f'{path}/text'
     if os.path.exists(text_path):
+        print("Text files:", os.listdir(text_path))
         for entry in os.listdir(text_path):
             with open(f'{text_path}/{entry}', 'r', encoding='utf-8') as f:
                 text = f.read()
                 if text.strip():  # Only process non-empty text
+                    print(f"Processing text for {post_id}, length: {len(text)}")
                     fakePercentage = detect_text(text)
+                    print(f"Text detection result: {fakePercentage}")
                     if fakePercentage >= 0:
                         result += [{
                             "id": post_id,
                             "percent_ai": fakePercentage
                         }]
+                        print(f"Added text result for {post_id}: {fakePercentage}")
 
     for entry in os.listdir(f'{path}/images'):
        percentage = detect_image(f'{path}/images/{entry}')
@@ -123,9 +127,9 @@ def detect_text(text):
     r = requests.post('https://api.zerogpt.com/api/detect/detectText', json=body, headers=headers)
     output = json.loads(r.text)
     print("ZeroGPT response:", output)
-    if 'fakePercentage' in output:
-        return output['fakePercentage'] / 100
-    
+    if 'data' in output and 'fakePercentage' in output['data']:
+        return output['data']['fakePercentage'] / 100
+
     return -1
 
 def detect_image(path):
