@@ -4,6 +4,8 @@ let runId = 0;
 let enabled;
 let threshold = 1;
 
+let scoreMap = new Map();
+
 const structs = {
   post: {
     hiding_what: "comment",
@@ -47,6 +49,7 @@ const waitForElement = (selector, callback) => {
 };
 
 const run_limiter = (type) => {
+  if (!enabled) return
   // prevents re-inits on same type
   // if (activeType === type) return;
   // Disconnect old observer if it exists
@@ -92,6 +95,8 @@ const run_limiter = (type) => {
           if (hideSet.has(item_id)) {
             console.log(`Hiding ${type_struct.hiding_what} ${item_id}`);
             item.style.display = "none";
+          } else {
+            item.style.display = "";
           }
         });
 
@@ -111,10 +116,18 @@ const run_limiter = (type) => {
       const get_item_list = () => {
         const inner_items = outer_struct.querySelectorAll(type_struct.inner_item);
 
-        return [...inner_items].map(i => ({
-          id: i.getAttribute(type_struct.id_name),
-          percent_ai: Math.random()
-        }));
+        return [...inner_items].map(item => {
+          const id = item.getAttribute(type_struct.id_name);
+
+          if (!scoreMap.has(id)) {
+            scoreMap.set(id, Math.random()); // placeholder AI
+          }
+
+          return {
+            id,
+            percent_ai: scoreMap.get(id)
+          };
+        });
       };
 
       // Create observer and store it
@@ -167,6 +180,19 @@ const observeNavigation = () => {
   });
 };
 
+const disableLimiter = () => {
+  if (activeObserver) {
+    activeObserver.disconnect();
+    activeObserver = null;
+  }
+
+  // Show all posts/comments again
+  document.querySelectorAll("[data-processed-run]").forEach(el => {
+    el.style.display = "";
+    delete el.dataset.processedRun;
+  });
+};
+
 const init = () => {
   handleRouteChange();     // run once initially
   observeNavigation();     // listen for SPA changes
@@ -184,13 +210,16 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
   if (changes.enabled) {
     enabled = changes.enabled.newValue ?? true;
+
+    if (!enabled) {
+      disableLimiter();
+      return;
+    }
   }
 
   if (changes.threshold) {
     threshold = (changes.threshold.newValue ?? 100) / 100;
   }
-
-  console.log("Storage updated:", { enabled, threshold });
 
   // Re-run limiter logic safely
   handleRouteChange();
